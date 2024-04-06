@@ -1,0 +1,55 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.17;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract MyToken is ERC20 {
+    address public creatorAddress;
+    address public holderAddress;
+    bool public isActiveToken;
+    bool public isTransferAllowed;
+
+    modifier onlyCreator() {
+        require(msg.sender == creatorAddress, "Only the creator can call this function");
+        _;
+    }
+
+    modifier onlyHolder() {
+        require(msg.sender == holderAddress, "Only the holder can call this function");
+        _;
+    }
+
+    constructor() ERC20("My Token", "MTK") {
+        creatorAddress = msg.sender;
+        holderAddress = msg.sender;
+        isActiveToken = false;
+        isTransferAllowed = true;
+    }
+
+    function activateToken() external {
+        require(isTransferAllowed, "Token transfer is disabled");
+        require(!isActiveToken, "Token already activated");
+        _mint(creatorAddress, 100);
+        isActiveToken = true;
+    }
+
+    function mintTokens(address recipient, uint256 amount) external onlyCreator {
+        _mint(recipient, amount);
+    }
+
+    function burnTokens(uint256 amount) external {
+        _burn(msg.sender, amount);
+    }
+
+    function transferTokens(address recipient, uint256 amount) external {
+        _transfer(msg.sender, recipient, amount);
+    }
+
+    function getAccountBalance(address account) external view returns (uint256) {
+        return balanceOf(account);
+    }
+
+    function disableTransfer() external onlyCreator {
+        isTransferAllowed = false;
+    }
+}
